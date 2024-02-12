@@ -1,0 +1,39 @@
+name: Build Domoticz
+
+on:
+  workflow_dispatch:
+
+#used for both X86 and qemu, require to rebuild the github packages via a manual workflow_dispatch
+env:
+  Vcmake: 3.26.3
+  Vboost: 1.83.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name : Checkout
+      # if: ${{ github.event_name != 'workflow_dispatch' }}
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+        repository: domoticz/domoticz-docker
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build image
+      run: |
+        chmod +x ./buildstable.sh
+        build_cmd=`./buildstable.sh | tail -n 1 | sed 's/--tag\ domoticz\/domoticz:[a-z0-9A-Z\.]*//g'`
+        bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest"
+        # docker tag domoticz/domoticz:stable ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+        # docker push ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest

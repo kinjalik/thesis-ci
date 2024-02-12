@@ -1,0 +1,48 @@
+name: Build Mosquitto
+
+on: workflow_dispatch
+
+env:
+  MOSQUITTO_VERSION: 'v2.0.18'
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  build_mosquitto:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: eclipse/mosquitto
+        ref: refs/tags/${{ env.MOSQUITTO_VERSION }}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # - name: "release: Docker build"
+    #   run: |
+    #     TAG="$(git describe --tags)"
+    #     docker buildx build \
+    #       --build-arg COMMIT=$(git rev-parse --short HEAD) \
+    #       --platform linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7 \
+    #       -f docker/Dockerfile \
+    #       --provenance=false \
+    #       --push \
+    #       -t ghcr.io/kinjalik/thesis_zigbee2mqtt:1.35.3 \
+    #       .
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: docker/2.0-openssl/
+        file: docker/2.0-openssl/Dockerfile
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/thesis_mosquitto:${{ env.MOSQUITTO_VERSION }}
+        platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
+        provenance: false
