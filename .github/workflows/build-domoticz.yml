@@ -1,7 +1,7 @@
 name: Build Domoticz
 
 on:
-  workflow_dispatch:
+  push:
 
 #used for both X86 and qemu, require to rebuild the github packages via a manual workflow_dispatch
 env:
@@ -37,3 +37,28 @@ jobs:
         bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest"
         # docker tag domoticz/domoticz:stable ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
         # docker push ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+        format: cyclonedx-json
+        artifact-name: sbom.json
+    
+  SCA:
+    needs: build
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Download SBOM
+        uses: actions/download-artifact@master
+        with:
+          name: sbom.json
+          path: .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: sbom
+          input: sbom.json
+          format: sarif
+          output: sca_result.sarif
+
+        

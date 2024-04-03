@@ -1,6 +1,6 @@
 name: Build Zigbee2MQTT
 
-on: workflow_dispatch
+on: push
 
 env:
   Z2M_VERSION: '1.35.3'
@@ -11,13 +11,102 @@ permissions:
   packages: write
 
 jobs:
-  build_zigbee2mqtt:
+  fetch_code:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
         repository: Koenkk/zigbee2mqtt
         ref: refs/tags/${{ env.Z2M_VERSION }}
+    - uses: actions/upload-artifact@v4
+      with:
+        name: z2m_code
+        path: ./*
+  
+  semgrep_sast:
+    needs: ['fetch_code']
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@master
+      with:
+        name: z2m_code
+        path: .
+    - name: Scan with semgrep
+      run: semgrep --config="p/nodejs" --config="p/typescript" --config="p/javascript" --error --sarif --output report.sarif --metrics=off
+    - name: save report as pipeline artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: z2m_semgrep.sarif
+        path: report.sarif
+    
+  snyk_sast:
+    needs: ['fetch_code']
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@master
+      with:
+        name: z2m_code
+        path: .
+    - name: fafa
+      run: ls -lah
+    - uses: snyk/actions/setup@master
+    - name: Run Snyk to check for vulnerabilities
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      run: snyk code test --sarif-file-output=report.sarif || true
+    - name: save report as pipeline artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: z2m_snyk.sarif
+        path: report.sarif
+
+  SAST_checkpoint:
+    needs: 
+    - semgrep_sast
+    - snyk_sast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download semgrep report
+        uses: actions/download-artifact@master
+        with:
+          name: z2m_semgrep.sarif
+          path: .
+      - uses: geekyeggo/delete-artifact@v5
+        with:
+          name: z2m_semgrep.sarig
+      - name: Download snyk report
+        uses: actions/download-artifact@master
+        with:
+          name: z2m_snyk.sarif
+          path: .
+      - uses: geekyeggo/delete-artifact@v5
+        with:
+          name: z2m_snyk.sarig
+      - name: Merge SARIFs
+        uses: microsoft/sarif-actions@v0.1
+        with:
+          command: 'merge . --recurse true --output-file=sast_report.sarif'
+      - name: save report as pipeline artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: z2m_sast_report.sarif
+          path: sast_report.sarif
+  
+  build:
+    needs: [ SAST_checkpoint ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@master
+      with:
+        name: z2m_code
+        path: .
     - uses: actions/setup-node@v4
       with:
         node-version: 20
@@ -35,17 +124,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    # - name: "release: Docker build"
-    #   run: |
-    #     TAG="$(git describe --tags)"
-    #     docker buildx build \
-    #       --build-arg COMMIT=$(git rev-parse --short HEAD) \
-    #       --platform linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7 \
-    #       -f docker/Dockerfile \
-    #       --provenance=false \
-    #       --push \
-    #       -t ghcr.io/kinjalik/thesis_zigbee2mqtt:1.35.3 \
-    #       .
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
@@ -55,3 +133,28 @@ jobs:
         tags: ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ env.Z2M_VERSION }}
         platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
         provenance: false
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        image: ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ env.Z2M_VERSION }}
+        format: cyclonedx-json
+        artifact-name: sbom.json
+
+  SCA:
+    needs: build
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Download SBOM
+        uses: actions/download-artifact@master
+        with:
+          name: sbom.json
+          path: .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: sbom
+          input: sbom.json
+          format: sarif
+          output: sca_result.sarif
+
+        
