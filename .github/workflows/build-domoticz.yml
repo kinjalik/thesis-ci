@@ -42,7 +42,15 @@ jobs:
       with:
         image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
         format: cyclonedx-json
-        artifact-name: sbom.json
+        output-file: sbom.json
+        # artifact-name: sbom.json
+    - name: save report as pipeline artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: sbom.json
+        path: sbom.json
+
     
   SCA:
     needs: build
@@ -53,12 +61,22 @@ jobs:
         with:
           name: sbom.json
           path: .
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.1
+      - run: |
+          trivy sbom sbom.json --format sarif --output sca_result.sarif
+      - name: save report as pipeline artifact
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          scan-type: sbom
-          input: sbom.json
-          format: sarif
-          output: sca_result.sarif
+          name: sca_result.sarif
+          path: sca_result.sarif
 
+  DAST:
+    needs: build
+    runs-on: 'ubuntu-latest'
+    steps:
+      - run: 'echo tipa DAST'
+
+        
         
