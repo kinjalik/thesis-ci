@@ -99,7 +99,6 @@ jobs:
         with:
           name: mqtt_sast_report.sarif
           path: sast_report.sarif
-    
 
 
   build:

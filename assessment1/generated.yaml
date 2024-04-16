@@ -100,7 +100,7 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Pinning of artifacts:
@@ -184,7 +184,7 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Signing of artifacts:
@@ -408,7 +408,7 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Environment depending configuration parameters (secrets):
@@ -1497,7 +1497,7 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Evaluation of the trust of used components:
@@ -1550,12 +1550,12 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Handover of confidential parameters:
       uuid: 94a96f79-8bd6-4904-97c0-994ff88f176a
-      risk: Parameters are often used to set credentials, for example by starting
+      risk: Parameters are often used to set credentials, for e/xample by starting
         containers or applications; these parameters can often be seen by any one
         listing running processes on the target system.
       measure: Encryption ensures confidentiality of credentials e.g. from unauthorized
@@ -1642,7 +1642,7 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Inventory of running artifacts:
@@ -1721,7 +1721,7 @@ Build and Deployment:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Same artifact for environments:
@@ -1850,7 +1850,7 @@ Implementation:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     API design validation:
@@ -2002,7 +2002,7 @@ Implementation:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Versioning:
@@ -2040,7 +2040,7 @@ Implementation:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
 Information Gathering:
@@ -5872,7 +5872,7 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
   Static depth for applications:
@@ -5921,7 +5921,7 @@ Test and Verification:
         - 8.27
         - 8.28
         openCRE:
-        - https://www.opencre.org/rest/v1/standard/DevSecOps+Maturity+Model+(DSOMM)/Static
+        - https://www.opencre.org/rest/v1/standard/DevecOps+Maturity+Model+(DSOMM)/Static
           depth for applications/017d9e26-42b5-49a4-b945-9f59b308fb99
       isImplemented: false
       comments: ""
@@ -7181,7 +7181,7 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Software Composition Analysis (server side):
@@ -7249,7 +7249,7 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Static analysis for all components/libraries:
