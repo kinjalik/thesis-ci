@@ -5786,7 +5786,7 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Usage of different roles:
@@ -5872,65 +5872,10 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: true
-        B: false
-        C: false
-  Static depth for applications:
-    API design validation:
-      uuid: 017d9e26-42b5-49a4-b945-9f59b308fb99
-      risk: Creation of insecure or non-compliant API.
-      measure: |
-        Design contract-first APIs using an interface description language such as OpenAPI, AsyncAPI or SOAP
-        and validate the specification using specific tools.
-        Checks should be integrated in IDEs and CI/CD pipelines.
-      difficultyOfImplementation:
-        knowledge: 2
-        time: 2
-        resources: 2
-      usefulness: 4
-      level: 2
-      implementation:
-      - uuid: 261f243e-f89c-4169-b076-b22a03ec00be
-        name: Spectral
-        tags:
-        - linting
-        - api
-        - documentation
-        url: https://github.com/stoplightio/spectral
-        description: |
-          Spectral is a flexible JSON/YAML linter built with extensibility in mind.
-          It uses JSON/YAML path rules to describe the problems you want to find.
-      - uuid: d2c9403d-9da2-4518-b33f-8b74b9c5ca3f
-        name: API OAS Checker
-        tags:
-        - linting
-        - api
-        - documentation
-        url: https://github.com/italia/api-oas-checker
-        description: |
-          A tool to check OpenAPI specifications using a comprehensive ruleset based
-          on API best practices.
-      references:
-        samm2:
-        - V-ST-1-A
-        iso27001-2017:
-        - 14.2.1
-        - 14.2.5
-        iso27001-2022:
-        - 8.25
-        - 8.27
-        - 8.28
-        openCRE:
-        - https://www.opencre.org/rest/v1/standard/DevecOps+Maturity+Model+(DSOMM)/Static
-          depth for applications/017d9e26-42b5-49a4-b945-9f59b308fb99
-      isImplemented: false
-      comments: ""
-      tags:
-      - none
-      teamsImplemented:
         Default: false
         B: false
         C: false
+  Static depth for applications:
     Dead code elimination:
       uuid: d17dbff0-1f10-492a-b4c7-17bb59a0a711
       risk: Dead code increases the attack surface (use of hard coded credentials
@@ -7284,69 +7229,6 @@ Test and Verification:
         Default: false
         B: false
         C: false
-    Static analysis for all self written components:
-      uuid: ee68331f-9b1d-4f61-844b-b2ea04753a84
-      risk: Parts in the source code of the frontend or middleware have vulnerabilities.
-      measure: Usage of static analysis tools for all parts of the middleware and
-        frontend. Static analysis uses for example string matching algorithms and/or
-        dataflow analysis.
-      difficultyOfImplementation:
-        knowledge: 2
-        time: 2
-        resources: 1
-      usefulness: 4
-      level: 4
-      implementation:
-      - uuid: 6a0948a7-4781-4858-9766-f4303971b28b
-        name: eslint
-        tags: []
-        url: https://eslint.org/
-      - uuid: f911d2b4-3e0c-424c-acf9-3bd363ef5078
-        name: FindSecurityBugs
-        tags: []
-      - uuid: cccc2882-62ab-4175-afa1-58471017e8ed
-        name: jsprime
-        tags: []
-        url: https://github.com/dpnishant/jsprime
-      - uuid: 5b52a841-c281-45fd-b68f-0a93aa6fa398
-        name: Fortify Extension for Visual Studio Code
-        url: https://marketplace.visualstudio.com/items?itemName=fortifyvsts.fortify-extension-for-vs-code
-        tags:
-        - ide
-        - sast
-      - uuid: cf1213fd-8bfa-4a97-bf8b-937c93f31005
-        name: Setting Up the Visual Studio Code Extension Plugin
-        url: https://checkmarx.atlassian.net/wiki/spaces/SD/pages/1759216424/Setting+Up+the+Visual+Studio+Code+Extension+Plugin
-        tags:
-        - ide
-        - sast
-      - uuid: 3f5a493d-12d0-4468-b9fa-c3e4eae89ffb
-        name: HCL AppScan CodeSweep
-        url: https://marketplace.visualstudio.com/items?itemName=HCLTechnologies.hclappscancodesweep
-        tags:
-        - ide
-        - sast
-      dependsOn:
-      - Static analysis for important client side components
-      - Static analysis for important server side components
-      references:
-        samm2:
-        - V-ST-2-A
-        iso27001-2017:
-        - 12.6.1
-        iso27001-2022:
-        - 8.8
-        openCRE:
-        - https://www.opencre.org/rest/v1/standard/DevSecOps+Maturity+Model+(DSOMM)/Static
-          depth for applications/ee68331f-9b1d-4f61-844b-b2ea04753a84
-      isImplemented: false
-      comments: ""
-      tags:
-      - none
-      teamsImplemented:
-        Default: false
-        B: false
-        C: false
     Static analysis for important client side components:
       uuid: e237176b-bec5-447d-a926-e37d6dd60e4b
       risk: Important parts in the source code of the frontend have vulnerabilities.
@@ -7473,7 +7355,7 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
     Stylistic analysis:
@@ -7547,7 +7429,6 @@ Test and Verification:
       dependsOn:
       - Software Composition Analysis (server side)
       - Software Composition Analysis (client side)
-      - Static analysis for all self written components
       implementation: []
       references:
         samm2:
@@ -7568,7 +7449,7 @@ Test and Verification:
       tags:
       - none
       teamsImplemented:
-        Default: false
+        Default: true
         B: false
         C: false
 ...
