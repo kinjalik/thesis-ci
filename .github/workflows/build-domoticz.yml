@@ -7,8 +7,14 @@ on:
 env:
   Vcmake: 3.26.3
   Vboost: 1.83.0
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ github.sha }}"
 
 jobs:
+  determine_version:
+    runs-on: ubuntu-latest
+
+
+
   build:
     runs-on: ubuntu-latest
 
@@ -34,11 +40,11 @@ jobs:
       run: |
         chmod +x ./buildstable.sh
         build_cmd=`./buildstable.sh | tail -n 1 | sed 's/--tag\ domoticz\/domoticz:[a-z0-9A-Z\.]*//g'`
-        bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ github.sha }}"
+        bash -c "$build_cmd --tag ${{ env.IMAGE_NAME }}"
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
       with:
-        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ github.sha }}
+        image: ${{ env.IMAGE_NAME }}
         format: cyclonedx-json
         output-file: sbom.json
     - name: save report as pipeline artifact
