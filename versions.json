@@ -1,8 +1,5 @@
 {
-    "domoticz": {
-        "Vcmake": "3.26.3",
-        "Vboost": "1.83.0"
-    },
+    "domoticz": "2024.1",
     "mosquitto": "v2.0.18",
     "zigbee2mqtt": "1.35.3"
 }

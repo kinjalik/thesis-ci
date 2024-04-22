@@ -34,6 +34,7 @@ jobs:
       with:
         repository: Koenkk/zigbee2mqtt
         ref: refs/tags/${{ needs.determine_version.outputs.zigbee2mqtt }}
+        fetch-depth: 1
     - uses: actions/upload-artifact@v4
       with:
         name: z2m_code

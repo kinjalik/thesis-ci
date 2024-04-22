@@ -11,8 +11,7 @@ jobs:
   determine_version:
     runs-on: ubuntu-latest
     outputs:
-      Vcmake: ${{ steps.version.outputs.Vcmake }}
-      Vboost: ${{ steps.version.outputs.Vboost }}
+      domoticz: ${{ steps.version.outputs.DOMOTICZ_VERSION }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -21,8 +20,7 @@ jobs:
     - name: Read variables
       id: version
       run: |
-        echo "Vcmake=$(jq -r '.domoticz.Vcmake' versions.json)" >> $GITHUB_OUTPUT
-        echo "Vboost=$(jq -r '.domoticz.Vboost' versions.json)" >> $GITHUB_OUTPUT
+        echo "DOMOTICZ_VERSION=$(jq -r '.domoticz' versions.json)" >> $GITHUB_OUTPUT
 
   build:
     runs-on: ubuntu-latest
@@ -30,10 +28,9 @@ jobs:
 
     steps:
     - name : Checkout
-      # if: ${{ github.event_name != 'workflow_dispatch' }}
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        fetch-depth: 1
         submodules: true
         repository: domoticz/domoticz-docker
 
@@ -47,13 +44,16 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build image
-      env:
-        Vcmake: ${{ needs.determine_version.outputs.Vcmake}}
-        Vboost: ${{ needs.determine_version.outputs.Vboost}}
       run: |
-        chmod +x ./buildstable.sh
-        build_cmd=`./buildstable.sh | tail -n 1 | sed 's/--tag\ domoticz\/domoticz:[a-z0-9A-Z\.]*//g'`
-        bash -c "$build_cmd --tag ${{ env.IMAGE_NAME }}"
+        docker buildx create --name domoticz_build &&
+        docker buildx use domoticz_build &&
+        docker buildx inspect --bootstrap &&
+        docker buildx build --push --no-cache \
+                            --platform linux/arm/v7,linux/arm64,linux/amd64 \
+                            --build-arg APP_VERSION=${{ needs.determine_version.outputs.domoticz }} \
+                            --build-arg APP_HASH=${{ github.sha }} \
+                            --build-arg "BUILD_DATE=$(date)" \
+                            --tag ${{ env.IMAGE_NAME }} .
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
       with:
