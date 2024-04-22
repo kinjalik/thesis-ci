@@ -10,22 +10,25 @@ env:
 jobs:
   determine_version:
     runs-on: ubuntu-latest
+    outputs:
+      Vcmake: ${{ steps.version.outputs.Vcmake }}
+      Vboost: ${{ steps.version.outputs.Vboost }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
     - name: Read variables
+      id: version
       run: |
-        echo "Vcmake=$(jq -r '.domoticz.Vcmake' versions.json)" >> $GITHUB_ENV
-        echo "Vboost=$(jq -r '.domoticz.Vboost' versions.json)" >> $GITHUB_ENV
+        echo "Vcmake=$(jq -r '.domoticz.Vcmake' versions.json)" >> $GITHUB_OUTPUT
+        echo "Vboost=$(jq -r '.domoticz.Vboost' versions.json)" >> $GITHUB_OUTPUT
 
   build:
     runs-on: ubuntu-latest
     needs: [determine_version]
 
     steps:
-    - run: "echo ${{ env.Vcmake }}"
     - name : Checkout
       # if: ${{ github.event_name != 'workflow_dispatch' }}
       uses: actions/checkout@v3
@@ -44,6 +47,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build image
+      env:
+        Vcmake: ${{ needs.determine_version.outputs.Vcmake}}
+        Vboost: ${{ needs.determine_version.outputs.Vboost}}
       run: |
         chmod +x ./buildstable.sh
         build_cmd=`./buildstable.sh | tail -n 1 | sed 's/--tag\ domoticz\/domoticz:[a-z0-9A-Z\.]*//g'`

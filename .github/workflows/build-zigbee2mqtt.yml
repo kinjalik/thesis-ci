@@ -3,7 +3,6 @@ name: Build Zigbee2MQTT
 on: push
 
 env:
-  Z2M_VERSION: '1.35.3'
   IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ github.sha }}"
 
 permissions:
@@ -12,13 +11,29 @@ permissions:
   packages: write
 
 jobs:
+  determine_version:
+    runs-on: ubuntu-latest
+    outputs:
+      zigbee2mqtt: ${{ steps.version.outputs.Z2M_VERSION }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Read variables
+      id: version
+      run: |
+        echo "Z2M_VERSION=$(jq -r '.zigbee2mqtt' versions.json)" >> $GITHUB_OUTPUT
+        cat $GITHUB_OUTPUT
+
   fetch_code:
     runs-on: ubuntu-latest
+    needs: [determine_version]
     steps:
     - uses: actions/checkout@v4
       with:
         repository: Koenkk/zigbee2mqtt
-        ref: refs/tags/${{ env.Z2M_VERSION }}
+        ref: refs/tags/${{ needs.determine_version.outputs.zigbee2mqtt }}
     - uses: actions/upload-artifact@v4
       with:
         name: z2m_code

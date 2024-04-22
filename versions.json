@@ -2,5 +2,7 @@
     "domoticz": {
         "Vcmake": "3.26.3",
         "Vboost": "1.83.0"
-    }
+    },
+    "mosquitto": "v2.0.18",
+    "zigbee2mqtt": "1.35.3"
 }

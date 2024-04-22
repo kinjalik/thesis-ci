@@ -3,7 +3,6 @@ name: Build Mosquitto
 on: push
 
 env:
-  MOSQUITTO_VERSION: 'v2.0.18'
   IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_mosquitto:${{ github.sha }}"
 
 permissions:
@@ -12,13 +11,30 @@ permissions:
   packages: write
 
 jobs:
+  determine_version:
+    runs-on: ubuntu-latest
+    outputs:
+      mosquitto: ${{ steps.version.outputs.MOSQUITTO_VERSION }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Read variables
+      id: version
+      run: |
+        echo "MOSQUITTO_VERSION=$(jq -r '.mosquitto' versions.json)" >> $GITHUB_OUTPUT
+        cat $GITHUB_OUTPUT
+
   fetch_code:
     runs-on: ubuntu-latest
+
+    needs: [determine_version]
     steps:
     - uses: actions/checkout@v4
       with:
         repository: eclipse/mosquitto
-        ref: refs/tags/${{ env.MOSQUITTO_VERSION }}
+        ref: refs/tags/${{ needs.determine_version.outputs.mosquitto }}
     - uses: actions/upload-artifact@v4
       with:
         name: mosquitto_code
