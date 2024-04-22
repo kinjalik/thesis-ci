@@ -4,7 +4,7 @@ on: push
 
 env:
   Z2M_VERSION: '1.35.3'
-  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ env.GITHUB_SHA }}"
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ github.sha }}"
 
 permissions:
   contents: write
