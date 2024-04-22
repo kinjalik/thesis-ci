@@ -34,16 +34,13 @@ jobs:
       run: |
         chmod +x ./buildstable.sh
         build_cmd=`./buildstable.sh | tail -n 1 | sed 's/--tag\ domoticz\/domoticz:[a-z0-9A-Z\.]*//g'`
-        bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest"
-        # docker tag domoticz/domoticz:stable ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
-        # docker push ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+        bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ GITHUB_SHA }}"
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
       with:
-        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ GITHUB_SHA }}
         format: cyclonedx-json
         output-file: sbom.json
-        # artifact-name: sbom.json
     - name: save report as pipeline artifact
       uses: actions/upload-artifact@v4
       if: always()

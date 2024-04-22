@@ -117,30 +117,19 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    # - name: "release: Docker build"
-    #   run: |
-    #     TAG="$(git describe --tags)"
-    #     docker buildx build \
-    #       --build-arg COMMIT=$(git rev-parse --short HEAD) \
-    #       --platform linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7 \
-    #       -f docker/Dockerfile \
-    #       --provenance=false \
-    #       --push \
-    #       -t ghcr.io/kinjalik/thesis_zigbee2mqtt:1.35.3 \
-    #       .
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
         context: docker/2.0-openssl/
         file: docker/2.0-openssl/Dockerfile
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/thesis_mosquitto:${{ env.MOSQUITTO_VERSION }}
+        tags: ghcr.io/${{ github.repository_owner }}/thesis_mosquitto:${{ GITHUB_SHA }}
         platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
         provenance: false
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
       with:
-        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+        image: ghcr.io/${{ github.repository_owner }}/thesis_mosquitto:${{ GITHUB_SHA }}
         format: cyclonedx-json
         output-file: sbom.json
         # artifact-name: sbom.json

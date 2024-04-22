@@ -4,6 +4,7 @@ on: push
 
 env:
   Z2M_VERSION: '1.35.3'
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ GITHUB_SHA }}"
 
 permissions:
   contents: write
@@ -131,13 +132,13 @@ jobs:
         context: .
         file: docker/Dockerfile
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ env.Z2M_VERSION }}
+        tags: ${{ env.IMAGE_NAME }}
         platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
         provenance: false
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
       with:
-        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:latest
+        image: ${{ env.IMAGE_NAME }}
         format: cyclonedx-json
         output-file: sbom.json
         # artifact-name: sbom.json
