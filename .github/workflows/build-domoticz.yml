@@ -34,11 +34,11 @@ jobs:
       run: |
         chmod +x ./buildstable.sh
         build_cmd=`./buildstable.sh | tail -n 1 | sed 's/--tag\ domoticz\/domoticz:[a-z0-9A-Z\.]*//g'`
-        bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ GITHUB_SHA }}"
+        bash -c "$build_cmd --tag ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ env.GITHUB_SHA }}"
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
       with:
-        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ GITHUB_SHA }}
+        image: ghcr.io/${{ github.repository_owner }}/thesis_domoticz:${{ env.GITHUB_SHA }}
         format: cyclonedx-json
         output-file: sbom.json
     - name: save report as pipeline artifact
