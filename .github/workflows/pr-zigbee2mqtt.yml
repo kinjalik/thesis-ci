@@ -206,14 +206,23 @@ jobs:
     - SCA
     - DAST
     steps:
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Results of Zigbee2MQTT inspection
       - name: Post the result of inspection
         uses: peter-evans/create-or-update-comment@v4
         with:
-          comment-id: ${{ env.COMMENT_ID }}
+          comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
           body: |
             ### Results of Zigbee2MQTT inspection
             **Please, familiarize yourself with them**
 
             - [SAST inspection result](${{ needs.SAST_checkpoint.outputs.result_url }})
             - [SCA inspection result](${{ needs.SCA.outputs.result_url }})
+            - [DAST inspection result]()
