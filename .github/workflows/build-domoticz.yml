@@ -1,7 +1,8 @@
 name: Build Domoticz
 
-on:
-  push:
+# on:
+#   push:
+on: workflow_dispatch
 
 #used for both X86 and qemu, require to rebuild the github packages via a manual workflow_dispatch
 env:
