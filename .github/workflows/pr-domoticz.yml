@@ -1,8 +1,6 @@
-name: Build Domoticz
+name: PR Inspection of Domoticz
 
-# on:
-#   push:
-on: workflow_dispatch
+on: pull_request
 
 #used for both X86 and qemu, require to rebuild the github packages via a manual workflow_dispatch
 env:
@@ -72,6 +70,8 @@ jobs:
   SCA:
     needs: build
     runs-on: 'ubuntu-latest'
+    outputs:
+      result_url: ${{ steps.sca_result.outputs.artifact-url }}
     steps:
       - name: Download SBOM
         uses: actions/download-artifact@master
@@ -85,6 +85,7 @@ jobs:
       - name: save report as pipeline artifact
         uses: actions/upload-artifact@v4
         if: always()
+        id: sca_result
         with:
           name: sca_result.sarif
           path: sca_result.sarif
@@ -95,5 +96,28 @@ jobs:
     steps:
       - run: 'echo tipa DAST'
 
-        
-        
+  inspection_comment:
+    runs-on: ubuntu-latest
+    needs:
+    - SCA
+    - DAST
+    steps:
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Results of Domoticz inspection
+      - name: Post the result of inspection
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            ### Results of Domoticz inspection
+            **Please, familiarize yourself with them**
+
+            - [SCA inspection result](${{ needs.SCA.outputs.result_url }})
+            - [DAST inspection result]()
