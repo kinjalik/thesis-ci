@@ -46,8 +46,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: semgrep/semgrep
-    outputs:
-      result_url: ${{ steps.semgrep_result.outputs.artifact-url }}
     steps:
     - name: Download artifacts
       uses: actions/download-artifact@master
@@ -58,7 +56,6 @@ jobs:
       run: semgrep --config="p/nodejs" --config="p/typescript" --config="p/javascript" --error --sarif --output report.sarif --metrics=off
     - name: save report as pipeline artifact
       uses: actions/upload-artifact@v4
-      id: semgrep_result
       if: always()
       with:
         name: z2m_semgrep.sarif
@@ -93,6 +90,8 @@ jobs:
     - snyk_sast
     - DAST
     runs-on: ubuntu-latest
+    outputs:
+      result_url: ${{ steps.sast_result.outputs.artifact-url }}
     steps:
       - name: Download semgrep report
         uses: actions/download-artifact@master
@@ -109,7 +108,7 @@ jobs:
           path: .
       - uses: geekyeggo/delete-artifact@v5
         with:
-          name: z2m_snyk.sarig
+          name: z2m_snyk.sarif
       - name: Merge SARIFs
         uses: microsoft/sarif-actions@v0.1
         with:
@@ -117,6 +116,7 @@ jobs:
       - name: save report as pipeline artifact
         uses: actions/upload-artifact@v4
         if: always()
+        id: sast_result
         with:
           name: z2m_sast_report.sarif
           path: sast_report.sarif
@@ -172,6 +172,8 @@ jobs:
   SCA:
     needs: build
     runs-on: 'ubuntu-latest'
+    outputs:
+      result_url: ${{ steps.sca_result.outputs.artifact-url }}
     steps:
       - name: Download SBOM
         uses: actions/download-artifact@master
@@ -184,6 +186,7 @@ jobs:
           trivy sbom sbom.json --format sarif --output sca_result.sarif
       - name: save report as pipeline artifact
         uses: actions/upload-artifact@v4
+        id: sca_result
         if: always()
         with:
           name: sca_result.sarif
@@ -199,17 +202,18 @@ jobs:
   inspection_comment:
     runs-on: ubuntu-latest
     needs:
-    - semgrep_sast
-    - snyk_sast
+    - SAST_checkpoint
     - SCA
     - DAST
     steps:
       - name: Post the result of inspection
         uses: peter-evans/create-or-update-comment@v4
         with:
-          comment-id: "{{ env.COMMENT_ID }}"
+          comment-id: ${{ env.COMMENT_ID }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Results of Zigbee2MQTT inspection
             **Please, familiarize yourself with them**
 
-            - [Semgrep inspection result](${{ needs.semgrep_sast.outputs.result_url }})
+            - [SAST inspection result](${{ needs.SAST_checkpoint.outputs.result_url }})
+            - [SCA inspection result](${{ needs.SCA.outputs.result_url }})
