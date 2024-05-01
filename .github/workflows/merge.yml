@@ -30,7 +30,7 @@ jobs:
       with:
         working-directory: ./zigbee2mqtt
         image_name: ${{ env.Z2M_IMAGE_NAME }}
-        image_tag: ${{ steps.version.outputs.value }}
+        image_tag: ${{ steps.version.outputs.zigbee2mqtt }}
         sbom_filename: zigbee2mqtt.sbom.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
 

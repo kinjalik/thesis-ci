@@ -8,10 +8,10 @@ inputs:
 outputs:
   zigbee2mqtt:
     description: Version of Zigbee2MQTT
-    value: ${{ steps.version.outputs.Z2M}}
+    value: ${{ steps.version.outputs.Z2M }}
   mosquitto:
     description: Version of Mosquitto
-    value: ${{ steps.version.outputs.MOSQUITTO}}
+    value: ${{ steps.version.outputs.MOSQUITTO }}
   domoticz:
     description: Version of Domoticz
     value: ${{ steps.version.outputs.DOMOTICZ }}
