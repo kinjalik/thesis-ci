@@ -3,8 +3,9 @@ name: PR inspection Zigbee2MQTT
 on: pull_request
 
 env:
-  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt:${{ github.sha }}"
-  COMMENT_ID: z2m_inspeciton_result
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt"
+  IMAGE_TAG: ${{ github.sha }}
+  SBOM_FILENAME: sbom.json
 
 permissions:
   contents: write
@@ -12,29 +13,20 @@ permissions:
   packages: write
 
 jobs:
-  determine_version:
-    runs-on: ubuntu-latest
-    outputs:
-      zigbee2mqtt: ${{ steps.version.outputs.Z2M_VERSION }}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 1
-    - name: Read variables
-      id: version
-      run: |
-        echo "Z2M_VERSION=$(jq -r '.zigbee2mqtt' versions.json)" >> $GITHUB_OUTPUT
-        cat $GITHUB_OUTPUT
-
   fetch_code:
     runs-on: ubuntu-latest
-    needs: [determine_version]
     steps:
+    - uses: actions/checkout@v3
+    - name: Get Domoticz version
+      uses: ./.github/actions/get-version
+      id: version
+      with:
+        app_name: zigbee2mqtt
+
     - uses: actions/checkout@v4
       with:
         repository: Koenkk/zigbee2mqtt
-        ref: refs/tags/${{ needs.determine_version.outputs.zigbee2mqtt }}
+        ref: refs/tags/${{ steps.version.outputs.value }}
         fetch-depth: 1
     - uses: actions/upload-artifact@v4
       with:
@@ -125,49 +117,27 @@ jobs:
     needs: [ SAST_checkpoint ]
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
     - uses: actions/download-artifact@master
       with:
         name: z2m_code
-        path: .
-    - uses: actions/setup-node@v4
+        path: zigbee2mqtt
+
+    - name: Build Zigbee2MQTT
+      uses: ./.github/actions/build-zigbee2mqtt
       with:
-        node-version: 20
-        registry-url: https://registry.npmjs.org/
-        cache: npm
-    - name: Install dependencies
-      run: npm ci
-    - name: Build
-      run: npm run build
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/Dockerfile
-        push: true
-        tags: ${{ env.IMAGE_NAME }}
-        platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
-        provenance: false
-    - name: Generate SBOM
-      uses: anchore/sbom-action@v0
-      with:
-        image: ${{ env.IMAGE_NAME }}
-        format: cyclonedx-json
-        output-file: sbom.json
-        # artifact-name: sbom.json
+        working-directory: ./zigbee2mqtt
+        image_name: ${{ env.IMAGE_NAME }}
+        image_tag: ${{ env.IMAGE_TAG }}
+        sbom_filename: ${{ env.SBOM_FILENAME }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: save report as pipeline artifact
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: sbom.json
-        path: sbom.json
+        name: SBOM
+        path: zigbee2mqtt/${{ env.SBOM_FILENAME }}
 
   SCA:
     needs: build
@@ -175,15 +145,16 @@ jobs:
     outputs:
       result_url: ${{ steps.sca_result.outputs.artifact-url }}
     steps:
+      - uses: actions/checkout@v3
       - name: Download SBOM
         uses: actions/download-artifact@master
         with:
-          name: sbom.json
+          name: SBOM
           path: .
-      - run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.1
-      - run: |
-          trivy sbom sbom.json --format sarif --output sca_result.sarif
+      - uses: ./.github/actions/sca
+        with:
+          input_file: ${{ env.SBOM_FILENAME }}
+          output_file: sca_result.sarif
       - name: save report as pipeline artifact
         uses: actions/upload-artifact@v4
         id: sca_result

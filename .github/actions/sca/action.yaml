@@ -1,0 +1,21 @@
+name: Software Composition Analysis
+description: Run docker and necessary deps
+inputs:
+  input_file: 
+    description: 'Path to SBOM'
+    required: true
+    default: ''
+  output_file: 
+    description: 'Path to output report'
+    required: true
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.1
+      shell: bash
+    - run: |
+        trivy sbom ${{ inputs.input_file }} --format sarif --output ${{ inputs.output_file }}
+      shell: bash

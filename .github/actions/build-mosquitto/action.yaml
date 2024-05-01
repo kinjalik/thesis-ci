@@ -1,0 +1,49 @@
+name: Build Domoticz
+description: Run docker and necessary deps
+inputs:
+  working-directory: 
+    description: 'Working directory'
+    required: false
+    default: 'mosquitto'
+  image_name: 
+    description: 'Image name'
+    required: true
+    default: ''
+  image_tag: 
+    description: 'Image tag'
+    required: true
+    default: ''
+  sbom_filename:
+    description: Name of SBOM file
+    required: true
+    default: 'sbom.json'
+  github-token:
+    description: secrets.GITHUB_TOKEN
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github-token }}
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ inputs.working-directory }}/docker/2.0-openssl/
+        file: ${{ inputs.working-directory }}/docker/2.0-openssl/Dockerfile
+        push: true
+        tags: ${{ inputs.image_name }}:${{ inputs.image_tag }}
+        platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
+        provenance: false
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ inputs.image_name }}:${{ inputs.image_tag }}
+        format: cyclonedx-json
+        output-file: ${{inputs.working-directory }}/${{ inputs.sbom_filename }}
