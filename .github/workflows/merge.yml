@@ -1,0 +1,81 @@
+on:
+  pull_request:
+    branches:
+      - master
+    types: [closed]
+
+env:
+  Z2M_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt"
+  MOSQUTTO_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_mosquitto"
+  DOMOTICZ_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_domoticz"
+
+jobs:
+  prepare_zigbee2mqtt:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/get-version
+      id: version
+
+    - uses: actions/checkout@v4
+      with:
+        repository: Koenkk/zigbee2mqtt
+        ref: refs/tags/${{ steps.version.outputs.value }}
+        fetch-depth: 1
+        path: ./zigbee2mqtt
+    
+    - name: Build Zigbee2MQTT
+      uses: ./.github/actions/build-zigbee2mqtt
+      with:
+        working-directory: ./zigbee2mqtt
+        image_name: ${{ env.Z2M_IMAGE_NAME }}
+        image_tag: ${{ steps.version.outputs.value }}
+        sbom_filename: zigbee2mqtt.sbom.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+
+    - uses: actions/checkout@v4
+      with:
+        repository: eclipse/mosquitto
+        ref: refs/tags/${{ steps.version.outputs.mosquitto }}
+        fetch-depth: 1
+        path: ./mosquitto
+    
+    - name: Build Mosquitto
+      uses: ./.github/actions/build-mosquitto
+      with:
+        working-directory: ./mosquitto
+        image_name: ${{ env.MOSQUITTO_IMAGE_NAME }}
+        image_tag: ${{ steps.version.outputs.mosquitto}}
+        sbom_filename: mosquitto.sbom.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: actions/checkout@v4
+      with:
+        repository: domoticz/domoticz-docker
+        path: domoticz
+        fetch-depth: 1
+        submodules: true
+    
+    - name: Build domoticz
+      uses: ./.github/actions/build-domoticz
+      with:
+        working-directory: ./domoticz
+        app_version: ${{ steps.version.outputs.domoticz }}
+        image_name: ${{ env.DOMOTICZ_IMAGE_NAME }}
+        image_tag: ${{ steps.version.outputs.domoticz }}
+        sbom_filename: domoticz.sbom.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: Release ${{ github.sha }}
+        files: |
+          *.sbom.json
+        body: |
+          Zigbee2MQTT image: `${{ env.Z2M_IMAGE_NAME }}:${{ steps.version.outputs.zigbee2mqtt }}`
+          Mosquitto image: `${{ env.MOSQUITTO_IMAGE_NAME }}:${{ steps.version.outputs.mosquitto }}`
+          Domoticz image: `${{ env.DOMOTICZ_IMAGE_NAME }}:${{ steps.version.outputs.domoticz }}`

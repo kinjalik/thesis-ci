@@ -13,11 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Get Domoticz version
-      uses: ./.github/actions/get-version
+    - uses: ./.github/actions/get-version
       id: version
-      with:
-        app_name: domoticz
 
     - name : Checkout Domoticz
       uses: actions/checkout@v3
@@ -31,7 +28,7 @@ jobs:
       uses: ./.github/actions/build-domoticz
       with:
         working-directory: ./domoticz
-        app_version: ${{ steps.version.outputs.value }}
+        app_version: ${{ steps.version.outputs.domoticz }}
         image_name: ${{ env.IMAGE_NAME }}
         image_tag: ${{ env.IMAGE_TAG }}
         sbom_filename: ${{ env.SBOM_FILENAME }}

@@ -18,16 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Get Domoticz version
-      uses: ./.github/actions/get-version
+    - uses: ./.github/actions/get-version
       id: version
-      with:
-        app_name: mosquitto
 
     - uses: actions/checkout@v4
       with:
         repository: eclipse/mosquitto
-        ref: refs/tags/${{ steps.version.outputs.value }}
+        ref: refs/tags/${{ steps.version.outputs.mosquitto }}
         fetch-depth: 1
     - uses: actions/upload-artifact@v4
       with:

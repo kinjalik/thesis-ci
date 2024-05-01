@@ -6,9 +6,15 @@ inputs:
     required: true
     default: ''
 outputs:
-  value:
-    description: Version of required software
-    value: ${{ steps.version.outputs.VALUE}} 
+  zigbee2mqtt:
+    description: Version of Zigbee2MQTT
+    value: ${{ steps.version.outputs.Z2M}}
+  mosquitto:
+    description: Version of Mosquitto
+    value: ${{ steps.version.outputs.MOSQUITTO}}
+  domoticz:
+    description: Version of Domoticz
+    value: ${{ steps.version.outputs.DOMOTICZ }}
 
 runs:
   using: "composite"
@@ -17,4 +23,6 @@ runs:
       id: version
       shell: bash
       run: |
-        echo "VALUE=$(jq -r '.${{ inputs.app_name }}' versions.json)" >> $GITHUB_OUTPUT
+        echo "Z2M=$(jq -r '.zigbee2mqtt' versions.json)" >> $GITHUB_OUTPUT
+        echo "MOSQUITTO=$(jq -r '.mosquitto' versions.json)" >> $GITHUB_OUTPUT
+        echo "DOMOTICZ=$(jq -r '.domoticz' versions.json)" >> $GITHUB_OUTPUT
