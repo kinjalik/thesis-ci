@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: Koenkk/zigbee2mqtt
-        ref: refs/tags/${{ steps.version.outputs.value }}
+        ref: refs/tags/${{ steps.version.outputs.zigbee2mqtt }}
         fetch-depth: 1
         path: ./zigbee2mqtt
     
@@ -47,7 +47,7 @@ jobs:
       with:
         working-directory: ./mosquitto
         image_name: ${{ env.MOSQUITTO_IMAGE_NAME }}
-        image_tag: ${{ steps.version.outputs.mosquitto}}
+        image_tag: ${{ steps.version.outputs.mosquitto }}
         sbom_filename: mosquitto.sbom.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
