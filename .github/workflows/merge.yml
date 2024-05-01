@@ -6,7 +6,7 @@ on:
 
 env:
   Z2M_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_zigbee2mqtt"
-  MOSQUTTO_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_mosquitto"
+  MOSQUITTO_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_mosquitto"
   DOMOTICZ_IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_domoticz"
 
 jobs:
