@@ -1,0 +1,20 @@
+name: Get application version
+description: Run docker and necessary deps
+inputs:
+  app_name: 
+    description: 'Name of the application'
+    required: true
+    default: ''
+outputs:
+  value:
+    description: Version of required software
+    value: ${{ steps.version.outputs.VALUE}} 
+
+runs:
+  using: "composite"
+  steps:
+    - name: Read variables
+      id: version
+      shell: bash
+      run: |
+        echo "VALUE=$(jq -r '.${{ inputs.app_name }}' versions.json)" >> $GITHUB_OUTPUT

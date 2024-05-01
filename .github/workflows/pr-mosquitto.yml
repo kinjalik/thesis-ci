@@ -4,7 +4,9 @@ on: pull_request
 # on: push
 
 env:
-  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_mosquitto:${{ github.sha }}"
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/thesis_mosquitto"
+  IMAGE_TAG: "${{ github.sha }}"
+  SBOM_FILENAME: sbom.json
 
 permissions:
   contents: write
@@ -12,30 +14,20 @@ permissions:
   packages: write
 
 jobs:
-  determine_version:
-    runs-on: ubuntu-latest
-    outputs:
-      mosquitto: ${{ steps.version.outputs.MOSQUITTO_VERSION }}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 1
-    - name: Read variables
-      id: version
-      run: |
-        echo "MOSQUITTO_VERSION=$(jq -r '.mosquitto' versions.json)" >> $GITHUB_OUTPUT
-        cat $GITHUB_OUTPUT
-
   fetch_code:
     runs-on: ubuntu-latest
-
-    needs: [determine_version]
     steps:
+    - uses: actions/checkout@v3
+    - name: Get Domoticz version
+      uses: ./.github/actions/get-version
+      id: version
+      with:
+        app_name: mosquitto
+
     - uses: actions/checkout@v4
       with:
         repository: eclipse/mosquitto
-        ref: refs/tags/${{ needs.determine_version.outputs.mosquitto }}
+        ref: refs/tags/${{ steps.version.outputs.value }}
         fetch-depth: 1
     - uses: actions/upload-artifact@v4
       with:
@@ -127,40 +119,26 @@ jobs:
     needs: [SAST_checkpoint]
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
     - uses: actions/download-artifact@master
       with:
         name: mosquitto_code
-        path: .
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
+        path: ./mosquitto
+    - name: Build Mosquitto
+      uses: ./.github/actions/build-mosquitto
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: docker/2.0-openssl/
-        file: docker/2.0-openssl/Dockerfile
-        push: true
-        tags: ${{ env.IMAGE_NAME }}
-        platforms: linux/arm64/v8,linux/386,linux/amd64,linux/arm/v6,linux/arm/v7
-        provenance: false
-    - name: Generate SBOM
-      uses: anchore/sbom-action@v0
-      with:
-        image: ${{ env.IMAGE_NAME }}
-        format: cyclonedx-json
-        output-file: sbom.json
-        # artifact-name: sbom.json
+        working-directory: ./mosquitto
+        image_name: ${{ env.IMAGE_NAME }}
+        image_tag: ${{ env.IMAGE_TAG }}
+        sbom_filename: ${{ env.SBOM_FILENAME }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: save report as pipeline artifact
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: sbom.json
-        path: sbom.json
+        name: SBOM
+        path: mosquitto/${{ env.SBOM_FILENAME }}
         
   SCA:
     needs: build
@@ -168,15 +146,16 @@ jobs:
     outputs:
       result_url: ${{ steps.sca_result.outputs.artifact-url }}
     steps:
+      - uses: actions/checkout@v3
       - name: Download SBOM
         uses: actions/download-artifact@master
         with:
-          name: sbom.json
+          name: SBOM
           path: .
-      - run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.1
-      - run: |
-          trivy sbom sbom.json --format sarif --output sca_result.sarif
+      - uses: ./.github/actions/sca
+        with:
+          input_file: ${{ env.SBOM_FILENAME }}
+          output_file: sca_result.sarif
       - name: save report as pipeline artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -215,6 +194,7 @@ jobs:
             ### Results of Mosquitto inspection
             **Please, familiarize yourself with them**
 
+            - Docker image: `${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}`
             - [SAST inspection result](${{ needs.SAST_checkpoint.outputs.result_url }})
             - [SCA inspection result](${{ needs.SCA.outputs.result_url }})
             - [DAST inspection result]()
