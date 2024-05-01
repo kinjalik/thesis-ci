@@ -26,3 +26,4 @@ runs:
         echo "Z2M=$(jq -r '.zigbee2mqtt' versions.json)" >> $GITHUB_OUTPUT
         echo "MOSQUITTO=$(jq -r '.mosquitto' versions.json)" >> $GITHUB_OUTPUT
         echo "DOMOTICZ=$(jq -r '.domoticz' versions.json)" >> $GITHUB_OUTPUT
+        echo $GITHUB_OUTPUT
