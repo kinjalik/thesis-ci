@@ -35,38 +35,38 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
 
-    # - uses: actions/checkout@v4
-    #   with:
-    #     repository: eclipse/mosquitto
-    #     ref: refs/tags/${{ steps.version.outputs.mosquitto }}
-    #     fetch-depth: 1
-    #     path: ./mosquitto
+    - uses: actions/checkout@v4
+      with:
+        repository: eclipse/mosquitto
+        ref: refs/tags/${{ steps.version.outputs.mosquitto }}
+        fetch-depth: 1
+        path: ./mosquitto
     
-    # - name: Build Mosquitto
-    #   uses: ./.github/actions/build-mosquitto
-    #   with:
-    #     working-directory: ./mosquitto
-    #     image_name: ${{ env.MOSQUITTO_IMAGE_NAME }}
-    #     image_tag: ${{ steps.version.outputs.mosquitto }}
-    #     sbom_filename: mosquitto.sbom.json
-    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Mosquitto
+      uses: ./.github/actions/build-mosquitto
+      with:
+        working-directory: ./mosquitto
+        image_name: ${{ env.MOSQUITTO_IMAGE_NAME }}
+        image_tag: ${{ steps.version.outputs.mosquitto }}
+        sbom_filename: mosquitto.sbom.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    # - uses: actions/checkout@v4
-    #   with:
-    #     repository: domoticz/domoticz-docker
-    #     path: domoticz
-    #     fetch-depth: 1
-    #     submodules: true
+    - uses: actions/checkout@v4
+      with:
+        repository: domoticz/domoticz-docker
+        path: domoticz
+        fetch-depth: 1
+        submodules: true
     
-    # - name: Build domoticz
-    #   uses: ./.github/actions/build-domoticz
-    #   with:
-    #     working-directory: ./domoticz
-    #     app_version: ${{ steps.version.outputs.domoticz }}
-    #     image_name: ${{ env.DOMOTICZ_IMAGE_NAME }}
-    #     image_tag: ${{ steps.version.outputs.domoticz }}
-    #     sbom_filename: domoticz.sbom.json
-    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build domoticz
+      uses: ./.github/actions/build-domoticz
+      with:
+        working-directory: ./domoticz
+        app_version: ${{ steps.version.outputs.domoticz }}
+        image_name: ${{ env.DOMOTICZ_IMAGE_NAME }}
+        image_tag: ${{ steps.version.outputs.domoticz }}
+        sbom_filename: domoticz.sbom.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - run: echo "NOW=$(date +%s)" >> $GITHUB_ENV
     - name: Tag
@@ -87,9 +87,7 @@ jobs:
         name: Release ${{ env.NOW }}
         tag_name: ${{ env.NOW }}
         files: |
-          domoticz.sbom.json
-          mosquitto.sbom.json
-          zigbee2mqtt.sbom.json
+          **/*.sbom.json
         body: |
           Zigbee2MQTT image: `${{ env.Z2M_IMAGE_NAME }}:${{ steps.version.outputs.zigbee2mqtt }}`
           Mosquitto image: `${{ env.MOSQUITTO_IMAGE_NAME }}:${{ steps.version.outputs.mosquitto }}`
