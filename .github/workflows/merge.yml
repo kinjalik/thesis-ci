@@ -85,7 +85,7 @@ jobs:
       # if: startsWith(github.ref, 'refs/tags/')
       with:
         name: Release ${{ github.sha }}
-        tag_name: ${{ end.NOW }}
+        tag_name: ${{ env.NOW }}
         files: |
           *.sbom.json
         body: |
