@@ -80,14 +80,16 @@ jobs:
             sha: context.sha
           })
     
+    - run: ls
     - name: Release
       uses: softprops/action-gh-release@v2
-      # if: startsWith(github.ref, 'refs/tags/')
       with:
-        name: Release ${{ github.sha }}
+        name: Release ${{ env.NOW }}
         tag_name: ${{ env.NOW }}
         files: |
-          *.sbom.json
+          domoticz.sbom.json
+          mosquitto.sbom.json
+          zigbee2mqtt.sbom.json
         body: |
           Zigbee2MQTT image: `${{ env.Z2M_IMAGE_NAME }}:${{ steps.version.outputs.zigbee2mqtt }}`
           Mosquitto image: `${{ env.MOSQUITTO_IMAGE_NAME }}:${{ steps.version.outputs.mosquitto }}`
