@@ -87,9 +87,7 @@ jobs:
         name: Release ${{ env.NOW }}
         tag_name: ${{ env.NOW }}
         files: |
-          domoticz.sbom.json
-          mosquitto.sbom.json
-          zigbee2mqtt.sbom.json
+          **/*.sbom.json
         body: |
           Zigbee2MQTT image: `${{ env.Z2M_IMAGE_NAME }}:${{ steps.version.outputs.zigbee2mqtt }}`
           Mosquitto image: `${{ env.MOSQUITTO_IMAGE_NAME }}:${{ steps.version.outputs.mosquitto }}`
