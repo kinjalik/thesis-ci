@@ -67,12 +67,24 @@ jobs:
     #     image_tag: ${{ steps.version.outputs.domoticz }}
     #     sbom_filename: domoticz.sbom.json
     #     github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Tag
+      uses: actions/github-script@v5
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: 'refs/tags/${{ github.sha }}',
+            sha: context.sha
+          })
     
     - name: Release
       uses: softprops/action-gh-release@v2
       # if: startsWith(github.ref, 'refs/tags/')
       with:
         name: Release ${{ github.sha }}
+        tag_name: ${{ github.sha }}
         files: |
           *.sbom.json
         body: |
