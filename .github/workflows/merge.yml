@@ -68,7 +68,7 @@ jobs:
     #     sbom_filename: domoticz.sbom.json
     #     github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+    - run: echo "NOW=$(date +%s)" >> $GITHUB_ENV
     - name: Tag
       uses: actions/github-script@v5
       with:
