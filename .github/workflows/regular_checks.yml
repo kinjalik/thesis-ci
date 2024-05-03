@@ -1,0 +1,105 @@
+name: Scheduled SCA Check
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'  # Runs every day at 2:00 AM
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sca_job:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get Latest Release
+      id: get-latest-release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data } = await github.rest.repos.getLatestRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+          console.log('Latest release ID:', data.id);
+          core.setOutput('release_id', data.id);
+          core.setOutput('release_tag_name', data.tag_name);
+
+    - name: Download Artifacts
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const artifacts = await github.rest.repos.listReleaseAssets({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ steps.get-latest-release.outputs.release_id }}
+          });
+          console.log(artifacts);
+          await Promise.all(artifacts.data.map(async (artifact) => {
+            if (!artifact.name.endsWith('.sbom.json')) {
+              return
+            }
+
+            const res = await fetch(artifact.browser_download_url, {
+              "method": "GET"
+            }) 
+
+            const path = `./${artifact.name}`;
+            fs.writeFileSync(path, Buffer.from(await res.text()));
+            console.log(`SBOM Artifact ${artifact.name} downloaded to ${path}`);
+          }));
+    
+    - run: ls -lah
+    - run: cat domoticz.sbom.json
+    - uses: ./.github/actions/sca
+      with:
+        input_file: domoticz.sbom.json
+        output_file: domoticz.sca.sarif
+    - uses: ./.github/actions/sca
+      with:
+        input_file: mosquitto.sbom.json
+        output_file: mosquitto.sca.sarif
+    - uses: ./.github/actions/sca
+      with:
+        input_file: zigbee2mqtt.sbom.json
+        output_file: zigbee2mqtt.sca.sarif
+    
+    - name: Upload SARIF Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: sca-reports
+        path: '*.sca.sarif'
+
+    - name: Domoticz sarif to issue
+      uses: sett-and-hive/sarif-to-issue-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        branch: ${{ github.head_ref }}
+        sarif-file: domoticz.sca.sarif
+        title: Domoticz security issues
+        labels: security
+        dry-run: false
+    - name: Zigbee2mqtt sarif to issue
+      uses: sett-and-hive/sarif-to-issue-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        branch: ${{ github.head_ref }}
+        sarif-file: zigbee2mqtt.sca.sarif
+        title: Zigbee2MQTT security issues
+        labels: security
+        dry-run: false
+    - name: Mosquitto sarif to issue
+      uses: sett-and-hive/sarif-to-issue-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        branch: ${{ github.head_ref }}
+        sarif-file: mosquitto.sca.sarif
+        title: Mosquitto security issues
+        labels: security
+        dry-run: false
