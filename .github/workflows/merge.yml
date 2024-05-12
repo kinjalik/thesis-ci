@@ -33,7 +33,9 @@ jobs:
         image_tag: ${{ steps.version.outputs.zigbee2mqtt }}
         sbom_filename: zigbee2mqtt.sbom.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
-
+    - run: |
+        docker tag ${{ env.Z2M_IMAGE_NAME }}:${{ steps.version.outputs.zigbee2mqtt }} ${{ env.Z2M_IMAGE_NAME }}:latest
+        docker push ${{ env.Z2M_IMAGE_NAME }}:latest
 
     - uses: actions/checkout@v4
       with:
@@ -50,6 +52,9 @@ jobs:
         image_tag: ${{ steps.version.outputs.mosquitto }}
         sbom_filename: mosquitto.sbom.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
+    - run: |
+        docker tag ${{ env.MOSQUITTO_IMAGE_NAME }}:${{ steps.version.outputs.mosquitto }} ${{ env.MOSQUITTO_IMAGE_NAME }}:latest
+        docker push ${{ env.MOSQUITTO_IMAGE_NAME }}:latest
 
     - uses: actions/checkout@v4
       with:
@@ -67,6 +72,9 @@ jobs:
         image_tag: ${{ steps.version.outputs.domoticz }}
         sbom_filename: domoticz.sbom.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
+    - run: |
+        docker tag ${{ env.DOMOTICZ_IMAGE_NAME }}:${{ steps.version.outputs.domoticz }} ${{ env.DOMOTICZ_IMAGE_NAME }}:latest
+        docker push ${{ env.DOMOTICZ_IMAGE_NAME }}:latest
 
     - run: echo "NOW=$(date +%s)" >> $GITHUB_ENV
     - name: Tag
